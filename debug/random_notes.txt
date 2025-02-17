@@ -1,0 +1,8 @@
+Random development notes:
+
+Looking into different caching solutions. Memory usage is becoming a problem with our current implementation. Maybe we should consider using Redis or a similar in-memory cache.
+
+Also need to look into:
+- Database optimization
+- API rate limiting
+- Error logging improvements

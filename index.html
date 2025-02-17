@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Similar Content Finder</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    .editor {
+      height: 300px;
+      overflow-y: auto;
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin-bottom: 10px;
+      white-space: pre-wrap;
+    }
+    .result-item {
+      margin-bottom: 20px;
+      padding: 15px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container mt-4">
+    <h1>Similar Content Finder</h1>
+    
+    <div class="mb-4">
+      <label for="rootDir" class="form-label">Root Directory:</label>
+      <div class="input-group">
+        <input type="text" id="rootDir" class="form-control" value="/debug">
+        <button class="btn btn-outline-secondary" onclick="updateRootDir()">Update</button>
+      </div>
+    </div>
+
+    <div class="mb-4">
+      <label for="searchQuery" class="form-label">Search Query:</label>
+      <div class="input-group">
+        <input type="text" id="searchQuery" class="form-control" placeholder="Enter your search query">
+        <button class="btn btn-primary" onclick="search()">Search</button>
+      </div>
+    </div>
+
+    <div id="results"></div>
+  </div>
+
+  <script>
+    async function search() {
+      const query = document.getElementById('searchQuery').value;
+      const response = await fetch('/api/search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query })
+      });
+      
+      const results = await response.json();
+      displayResults(results);
+    }
+
+    function displayResults(results) {
+      const resultsDiv = document.getElementById('results');
+      resultsDiv.innerHTML = '';
+      
+      results.forEach(result => {
+        const resultItem = document.createElement('div');
+        resultItem.className = 'result-item';
+        
+        resultItem.innerHTML = `
+          <h5>${result.relative_path}</h5>
+          <div class="editor" contenteditable="true">${result.content}</div>
+          <div class="btn-group">
+            <button class="btn btn-primary btn-sm" onclick="saveFile('${result.file_path}', this)">Save</button>
+            <button class="btn btn-secondary btn-sm" onclick="openFolder('${result.file_path}')">Open Folder</button>
+          </div>
+        `;
+        
+        resultsDiv.appendChild(resultItem);
+      });
+    }
+
+    async function saveFile(filePath, button) {
+      const editor = button.parentElement.previousElementSibling;
+      const content = editor.innerText;
+      
+      try {
+        const response = await fetch('/api/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ file_path: filePath, content })
+        });
+        
+        if (response.ok) {
+          alert('File saved successfully!');
+        } else {
+          const data = await response.json();
+          alert('Error saving file: ' + data.error);
+        }
+      } catch (error) {
+        alert('Error saving file: ' + error);
+      }
+    }
+
+    function openFolder(filePath) {
+      const folderPath = filePath.substring(0, filePath.lastIndexOf('\\'));
+      window.open('file://' + folderPath);
+    }
+
+    async function updateRootDir() {
+      const rootDir = document.getElementById('rootDir').value;
+      try {
+        const response = await fetch('/api/update_root', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ root_dir: rootDir })
+        });
+        
+        if (response.ok) {
+          alert('Root directory updated successfully!');
+        } else {
+          const data = await response.json();
+          alert('Error updating root directory: ' + data.error);
+        }
+      } catch (error) {
+        alert('Error updating root directory: ' + error);
+      }
+    }
+
+    // Initialize root directory from URL if present
+    window.onload = function() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const rootDir = urlParams.get('root');
+      if (rootDir) {
+        document.getElementById('rootDir').value = rootDir;
+        updateRootDir();
+      }
+    };
+  </script>
+</body>
+</html>
