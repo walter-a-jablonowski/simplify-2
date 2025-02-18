@@ -9,7 +9,9 @@ import webbrowser
 from pathlib import Path
 
 class SimilaritySearch:
+
   def __init__(self, chunk_size=1000):
+
     self.model = SentenceTransformer("all-MiniLM-L6-v2")
     self.chunk_size = chunk_size
     self.index = None
@@ -18,6 +20,7 @@ class SimilaritySearch:
     self.chunk_positions = []
 
   def chunk_text(self, text):
+
     words = text.split()
     chunks = []
     for i in range(0, len(words), self.chunk_size):
@@ -26,14 +29,15 @@ class SimilaritySearch:
     return chunks
 
   def index_files(self, directory):
+
     self.chunks = []
     self.file_paths = []
     self.chunk_positions = []
     
-    for root, _, files in os.walk(directory):
+    for base, _, files in os.walk(directory):
       for file in files:
         if file.endswith((".txt", ".md", ".json", ".py", ".js", ".html", ".css")):
-          path = os.path.join(root, file)
+          path = os.path.join(base, file)
           try:
             with open(path, "r", encoding="utf-8") as f:
               content = f.read()
@@ -54,6 +58,7 @@ class SimilaritySearch:
     self.index.add(vectors)
 
   def search(self, query, top_k=5):
+
     if not self.index:
       return []
       
@@ -69,10 +74,14 @@ class SimilaritySearch:
           "position": self.chunk_positions[idx],
           "relative_path": os.path.relpath(self.file_paths[idx], search_engine.root_dir)
         })
+
     return results
 
+
 class RequestHandler(SimpleHTTPRequestHandler):
+
   def do_GET(self):
+
     if self.path == "/":
       self.send_response(200)
       self.send_header("Content-type", "text/html")
@@ -83,6 +92,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
       super().do_GET()
 
   def do_POST(self):
+
     content_length = int(self.headers["Content-Length"])
     post_data = self.rfile.read(content_length)
     data = json.loads(post_data)
@@ -114,11 +124,11 @@ class RequestHandler(SimpleHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(json.dumps({"error": str(e)}).encode())
 
-    elif self.path == "/api/update_root":
-      new_root = data.get("root_dir", "")
-      if os.path.exists(new_root):
-        search_engine.root_dir = new_root
-        search_engine.index_files(new_root)
+    elif self.path == "/api/update_base":
+      new_base = data.get("base_dir", "")
+      if os.path.exists(new_base):
+        search_engine.root_dir = new_base
+        search_engine.index_files(new_base)
         self.send_response(200)
         self.send_header("Content-type", "application/json")
         self.end_headers()
@@ -127,9 +137,11 @@ class RequestHandler(SimpleHTTPRequestHandler):
         self.send_response(400)
         self.send_header("Content-type", "application/json")
         self.end_headers()
-        self.wfile.write(json.dumps({"error": "Directory does not exist"}).encode())
+        self.wfile.write(json.dumps({"error": "Dir missing"}).encode())
+
 
 if __name__ == "__main__":
+
   search_engine = SimilaritySearch()
   search_engine.root_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "debug")
   search_engine.index_files(search_engine.root_dir)

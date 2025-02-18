@@ -27,10 +27,10 @@
     <h1>Similar Content Finder</h1>
     
     <div class="mb-4">
-      <label for="rootDir" class="form-label">Root Directory:</label>
+      <label for="baseDir" class="form-label">Base dir:</label>
       <div class="input-group">
-        <input type="text" id="rootDir" class="form-control" value="/debug">
-        <button class="btn btn-outline-secondary" onclick="updateRootDir()">Update</button>
+        <input type="text" id="baseDir" class="form-control" value="/debug">
+        <button class="btn btn-outline-secondary" onclick="updateBaseDir()">Update</button>
       </div>
     </div>
 
@@ -106,33 +106,33 @@
       window.open('file://' + folderPath);
     }
 
-    async function updateRootDir() {
-      const rootDir = document.getElementById('rootDir').value;
+    async function updateBaseDir() {
+      const baseDir = document.getElementById('baseDir').value;
       try {
-        const response = await fetch('/api/update_root', {
+        const response = await fetch('/api/update_base', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ root_dir: rootDir })
+          body: JSON.stringify({ base_dir: baseDir })
         });
         
         if (response.ok) {
-          alert('Root directory updated successfully!');
+          alert('Base dir updated successfully!');
         } else {
           const data = await response.json();
-          alert('Error updating root directory: ' + data.error);
+          alert('Error updating base directory: ' + data.error);
         }
       } catch (error) {
-        alert('Error updating root directory: ' + error);
+        alert('Error updating base directory: ' + error);
       }
     }
 
-    // Initialize root directory from URL if present
+    // Initialize base dir from URL if present
     window.onload = function() {
       const urlParams = new URLSearchParams(window.location.search);
-      const rootDir = urlParams.get('root');
-      if (rootDir) {
-        document.getElementById('rootDir').value = rootDir;
-        updateRootDir();
+      const baseDir = urlParams.get('base');
+      if (baseDir) {
+        document.getElementById('baseDir').value = baseDir;
+        updateBaseDir();
       }
     };
   </script>

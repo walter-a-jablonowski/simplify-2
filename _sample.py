@@ -12,10 +12,10 @@ model = SentenceTransformer("all-MiniLM-L6-v2")
 # Function to read text from .txt and .md files
 def read_files(directory):
   docs, file_paths = [], []
-  for root, _, files in os.walk(directory):
+  for base, _, files in os.walk(directory):
     for file in files:
       if file.endswith(".txt") or file.endswith(".md"):
-        path = os.path.join(root, file)
+        path = os.path.join(base, file)
         try:
           with open(path, "r", encoding="utf-8") as f:
             content = f.read()

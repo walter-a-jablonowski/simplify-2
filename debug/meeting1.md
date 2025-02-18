@@ -1,4 +1,4 @@
-## Project Meeting Notes
+## Project Meeting
 
 We need to implement a new caching system for the application. The current implementation is too slow and uses too much memory. We should consider using Redis as a caching layer.
 
