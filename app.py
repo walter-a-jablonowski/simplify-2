@@ -2,26 +2,26 @@ import os
 import json
 import faiss
 import numpy as np
-from http.server import HTTPServer, SimpleHTTPRequestHandler
-from urllib.parse import parse_qs, urlparse
-from sentence_transformers import SentenceTransformer
+from   http.server  import HTTPServer, SimpleHTTPRequestHandler
+from   urllib.parse import parse_qs, urlparse
+from   sentence_transformers import SentenceTransformer
 import webbrowser
-from pathlib import Path
+from   pathlib import Path
 
 class SimilaritySearch:
 
   def __init__(self, chunk_size=1000):
 
-    self.model = SentenceTransformer("all-MiniLM-L6-v2")
+    self.model  = SentenceTransformer("all-MiniLM-L6-v2")
     self.chunk_size = chunk_size
-    self.index = None
+    self.index  = None
     self.chunks = []
     self.file_paths = []
     self.chunk_positions = []
 
   def chunk_text(self, text):
 
-    words = text.split()
+    words  = text.split()
     chunks = []
     for i in range(0, len(words), self.chunk_size):
       chunk = " ".join(words[i:i + self.chunk_size])
@@ -52,8 +52,8 @@ class SimilaritySearch:
     if not self.chunks:
       return
 
-    vectors = self.model.encode(self.chunks, convert_to_numpy=True)
-    dimension = vectors.shape[1]
+    vectors    = self.model.encode(self.chunks, convert_to_numpy=True)
+    dimension  = vectors.shape[1]
     self.index = faiss.IndexFlatL2(dimension)
     self.index.add(vectors)
 
@@ -62,7 +62,7 @@ class SimilaritySearch:
     if not self.index:
       return []
       
-    query_vector = self.model.encode([query], convert_to_numpy=True)
+    query_vector       = self.model.encode([query], convert_to_numpy=True)
     distances, indices = self.index.search(query_vector, top_k)
     
     results = []
@@ -70,8 +70,8 @@ class SimilaritySearch:
       if idx >= 0 and idx < len(self.chunks):
         results.append({
           "file_path": self.file_paths[idx],
-          "content": self.chunks[idx],
-          "position": self.chunk_positions[idx],
+          "content":   self.chunks[idx],
+          "position":  self.chunk_positions[idx],
           "relative_path": os.path.relpath(self.file_paths[idx], search_engine.root_dir)
         })
 
@@ -94,11 +94,11 @@ class RequestHandler(SimpleHTTPRequestHandler):
   def do_POST(self):
 
     content_length = int(self.headers["Content-Length"])
-    post_data = self.rfile.read(content_length)
-    data = json.loads(post_data)
+    post_data      = self.rfile.read(content_length)
+    data           = json.loads(post_data)
 
     if self.path == "/api/search":
-      query = data.get("query", "")
+      query   = data.get("query", "")
       results = search_engine.search(query)
       
       self.send_response(200)
@@ -107,8 +107,9 @@ class RequestHandler(SimpleHTTPRequestHandler):
       self.wfile.write(json.dumps(results).encode())
 
     elif self.path == "/api/save":
+      
       file_path = data.get("file_path", "")
-      content = data.get("content", "")
+      content   = data.get("content", "")
       
       try:
         with open(file_path, "w", encoding="utf-8") as f:
